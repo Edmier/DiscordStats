@@ -1,0 +1,78 @@
+header, footer {
+    background-color: black;
+    border-radius: 10px;
+    text-align: center;
+    padding: 0;
+    margin: 10px;
+}
+
+footer > div {
+    display: inline-block;
+}
+
+main {
+    background-color: rgb(56, 56, 56);
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    margin: 0 10px 0 10px;
+    text-align: center;
+}
+
+html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: rgb(56, 56, 56);
+    color: aliceblue;
+}
+
+h1, h3 {
+    font-family: 'Open Sans', sans-serif;
+    padding: 10px;
+    margin: 0;
+    
+}
+
+#dropzone {
+    border-style: dashed;
+    border-width: 4px;
+    border-color: aqua;
+    border-radius: 15px;
+    width: 50%;
+    display: inline-block;
+    padding: 10px;
+}
+
+#inputbutton {
+    padding: 5px;
+    border-style: solid;
+    border-color: gray;
+    margin: 50px;
+    display: inline;
+}
+
+#inputbutton:hover {
+    background-color: gray;
+}
+
+.container {
+    display: flex;
+    grid-template-columns: auto auto auto;
+}
+
+.container > div {
+    display: block;
+    background-color: black;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 10px;
+}
+
+#avatar {
+    width: 100px;
+}
+
+#resultblock {
+    text-align: left;
+}

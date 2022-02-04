@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./scripts/jszip.min.js"></script>
+    <!--Styles-->
+    <link rel="stylesheet" href="styles/index.css">
+    <!--Fonts-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Discord Data Browser</h1>
+        </div>
+    </header>
+    <main>
+        <div id="dropzone" ondrop="dropHandler(event);" ondragover="event.stopPropagation(); event.preventDefault();">
+            <p>Drag file here<br>Or<br></p>
+            <label for="data-input">
+                <span id="inputbutton" aria-hidden="true">Select File</span>
+                <input type="file" name="data" id="data-input" style="display:none">
+            </label>
+        </div>
+        <div class="container">
+            <div id="user">
+                <img id="avatar" src="" alt="">
+                <h2 id="username"></h2>
+                <h5 id="email"></h5>
+                <h5 id="phone"></h5>
+                <h5 id="friendcount"></h5>
+            </div>
+            <div id="General">
+                <h5 id="messages"></h5>
+                <h5 id="calls"></h5>
+                <h5 id="calltime"></h5>
+            </div>
+        </div>
+
+        <div id="resultblock">
+            <p>Progress: <span id="progress">0%</span></p>
+            <h3>Content :</h3>
+            <div id="result"></div>
+        </div>
+    </main>
+    <footer>
+        <div>
+            <h3>Discord</h3>
+        </div>
+        <div>
+            <h3>GitHub</h3>
+        </div>
+        <div>
+            <h3>Contact</h3>
+        </div><br>
+        <div>
+            <h5>Not affiliated with Discord</h5>
+        </div>
+    </footer>
+    <!--Scripts-->
+    <script src="./scripts/loader.js"></script>
+    <script src="./scripts/index.js"></script>
+</body>
+</html>
+
