@@ -1,10 +1,28 @@
 let veryStart;
 let veryEnd;
 
-let totalMessages = 0;
-let countedMessages = 0;
-let deletedMessages = 0;
+let data = {
+	profile: {
+		name: '',
+		avatar: '',
+		email: '',
+		phone: '',
+	},
+	general: {
+		messages: 0,
+		counted: 0,
+		deletes: 0,
+		edits: 0,
+		chars: 0,
+		appopened: 0,
+		joined: 0,
+		connectedmils: 0
+	}
+}
+
+
 let lastMessage = '';
+let loading = 0;
 
 async function scanMessages(string) {
 	
@@ -16,14 +34,27 @@ async function scanMessages(string) {
 	//Removes file header (['ID', 'Timestamp', 'Contents', 'Attachments'])
 	array.pop();
 
-	countedMessages += array.length;
+	data.general.counted += array.length;
+	
+	array.forEach(row => {
+		const message = row[2];
+		data.general.chars += message.length;
+	})
 
+	loading--;
 	// console.log(array.length, array[array.length - 1]);
 }
 
 const joinleaves = new Map();
 
 function calculateStats() {
+	if (loading !== 0) {
+	 	setTimeout(calculateStats, 1000);
+		console.log('Not Ready');
+		return;
+	}
+	console.log('Ready');
+
     const sorted = [...joinleaves.entries()].sort();
 
     let totalMills = 0;
@@ -47,16 +78,23 @@ function calculateStats() {
         }
     }
 
+	data.general.connectedmils = totalMills;
 	veryEnd = Date.now();
+
     console.log("Total time spent in voice channels:\n" + msToTime(totalMills), totalMills);
-	console.log('Total messages:', totalMessages, countedMessages, deletedMessages, countedMessages - deletedMessages);
+	console.log('Total messages:', data.general.messages, data.general.counted, data.general.deletes, data.general.counted - data.general.deletes);
 	console.log(`This took ${msToTime(veryEnd - veryStart)}`);
 
-	document.getElementById('messages').innerHTML = 'Sent Messages: ' + totalMessages;
-	document.getElementById('calltime').innerHTML = 'Time spent in VCs: ' + msToTime(totalMills);
+	changeValue('messages', data.general.messages);
+	changeValue('calltime', msToTime(data.general.connectedmils));
+	changeValue('edited', data.general.edits);
+	changeValue('characters', data.general.chars);
+	changeValue('opened', data.general.appopened);
+	changeValue('calls', data.general.joined);
 };
 
 async function unzipFiles(zipFile) {
+	resetData();
 	veryStart = Date.now();
 	console.log('Unzipping...');
 	result.innerHTML = '';
@@ -96,6 +134,7 @@ async function unzipFiles(zipFile) {
 
 			const startTime = Date.now();
 
+			loading++;
 			const blob = await zip.files[file.name].async('blob', async (metadata) => {
 				progress.innerHTML = metadata.percent.toFixed(2) + '%';
 			});
@@ -104,16 +143,20 @@ async function unzipFiles(zipFile) {
 			const stopTime = Date.now();
 			console.log(`Done! Took ${stopTime - startTime}ms - ${formatBytes(blob.size)}`);
 		} else if (file.name.includes('messages.csv')) {
-			console.log('Ok');
+			loading++;
 
-			await zip.files[file.name].async('string').then(async (blob) => {
-				await scanMessages(blob);
+			zip.files[file.name].async('string').then(async (blob) => {
+				scanMessages(blob);
 			});
 		} else if (file.name.includes('/avatar')) {
+			loading++;
+
 			await zip.files[file.name].async('base64').then(async (blob) => {
 				loadAvatar(blob);
 			});
 		} else if (file.name.includes('user.json')) {
+			loading++;
+
 			await zip.files[file.name].async('text').then(async (blob) => {
 				loadUser(blob);
 			});
@@ -176,6 +219,7 @@ async function loadAnalytics(blob) {
 		processLine(line);
 	});
 
+	loading--;
 }
 
 function processLine(line) {
@@ -191,26 +235,48 @@ function processLine(line) {
             channelId: event.channel_id,
             type: type.split('_')[0]
         });
+		if (type === 'join_voice_channel') data.general.joined++;
     } else if (type === 'send_message') {
-		totalMessages++;
+		data.general.messages++;
 	} else if (type === 'message_deleted') {
-		deletedMessages++;
+		data.general.deletes++;
+	} else if (type === 'message_edited') {
+		data.general.edits++;
+	} else if (type === 'app_opened') {
+		data.general.appopened++;
 	}
 }
 
 function loadAvatar(blob) {
 	const img = document.getElementById('avatar');
-	img.src = 'data:image/bmp;base64,' + blob;
+	data.profile.avatar = 'data:image/bmp;base64,' + blob;
+	img.src = data.profile.avatar;
+	loading--;
 }
 
 function loadUser(string) {
 	const user = JSON.parse(string);
-	document.getElementById('username').innerHTML = user.username + '#' + user.discriminator;
-	document.getElementById('phone').innerHTML = user.phone;
-	document.getElementById('email').innerHTML = user.email;
-	document.getElementById('friendcount').innerHTML = 'Friends: ' + user.relationships.length;
+	data.profile = {
+		name: user.username + '#' + user.discriminator,
+		phone: user.phone,
+		email: user.email,
+		avatar: data.profile.avatar
+	}
+	changeValue('username', user.username + '#' + user.discriminator);
+	changeValue('phone', user.phone);
+	changeValue('email', user.email);
+	changeValue('friendcount', 'Friends: ' + user.relationships.length);
+	loading--;
 }
 
+function changeValue(id, data) {
+	if (typeof data === "number") {
+		data = data.toLocaleString();
+	}
+	try {
+		document.getElementById(id).innerHTML = data;
+	} catch(e) { }
+}
 
 function msToTime(s) {
 	let ms = s % 1000;
@@ -222,7 +288,7 @@ function msToTime(s) {
 
 	return `${hrs}:${mins <= 9 ? '0' : ''}${mins}:${
 		secs <= 9 ? '0' : ''
-	}${secs}.${ms}`;
+	}${secs}`;
 }
 
 function formatBytes(bytes, decimals = 2) {
@@ -284,4 +350,25 @@ function formatBytes(bytes, decimals = 2) {
 		rows[rows.length - 1].push(matched_value);
 	}
 	return rows; // Return the parsed data Array
+}
+
+function resetData() {
+	data = {
+		profile: {
+			name: '',
+			avatar: '',
+			email: '',
+			phone: '',
+		},
+		general: {
+			messages: 0,
+			counted: 0,
+			deletes: 0,
+			edits: 0,
+			chars: 0,
+			appopened: 0,
+			joined: 0,
+			connectedmils: 0
+		}
+	}
 }
