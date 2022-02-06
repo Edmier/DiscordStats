@@ -83,6 +83,25 @@ h1, h3 {
     text-align: right;
     float: right;
     color: aqua;
+    position: relative;
+}
+
+.container > div > h4 > span > .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+  
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 99;
+}
+  
+.container > div > h4 > span:hover .tooltiptext {
+    visibility: visible;
 }
 
 #avatar {

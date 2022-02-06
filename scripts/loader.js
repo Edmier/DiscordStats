@@ -16,7 +16,10 @@ let data = {
 		chars: 0,
 		appopened: 0,
 		joined: 0,
-		connectedmils: 0
+		connectedmils: 0,
+		servers: 0,
+		channels: 0,
+		dms: 0,
 	}
 }
 
@@ -85,12 +88,17 @@ function calculateStats() {
 	console.log('Total messages:', data.general.messages, data.general.counted, data.general.deletes, data.general.counted - data.general.deletes);
 	console.log(`This took ${msToTime(veryEnd - veryStart)}`);
 
-	changeValue('messages', data.general.messages);
+	changeValue('messages', data.general.messages, data.general.counted);
 	changeValue('calltime', msToTime(data.general.connectedmils));
 	changeValue('edited', data.general.edits);
+	changeValue('deleted', data.general.deletes);
 	changeValue('characters', data.general.chars);
 	changeValue('opened', data.general.appopened);
 	changeValue('calls', data.general.joined);
+
+	changeValue('servers', data.general.servers);
+	changeValue('channels', data.general.channels);
+	changeValue('dms', data.general.dms);
 };
 
 async function unzipFiles(zipFile) {
@@ -120,6 +128,7 @@ async function unzipFiles(zipFile) {
 
 	const files = zip.files;
 	const keys = Object.keys(files);
+
 	for (let i = 0; i < keys.length; i++) {
 		const file = files[keys[i]];
 		
@@ -145,6 +154,15 @@ async function unzipFiles(zipFile) {
 		} else if (file.name.includes('messages.csv')) {
 			loading++;
 
+			zip.files[file.name.replace('messages.csv', 'channel.json')].async('string').then(async (blob) => {
+				const channelData = JSON.parse(blob);
+				if (channelData.guild) {
+					data.general.channels++;
+				} else {
+					data.general.dms++;
+				}
+			});
+
 			zip.files[file.name].async('string').then(async (blob) => {
 				scanMessages(blob);
 			});
@@ -160,6 +178,8 @@ async function unzipFiles(zipFile) {
 			await zip.files[file.name].async('text').then(async (blob) => {
 				loadUser(blob);
 			});
+		} else if (file.name.includes('guild.json')) {
+			data.general.servers++;
 		}
 	}
 	calculateStats();
@@ -269,16 +289,28 @@ function loadUser(string) {
 	loading--;
 }
 
-function changeValue(id, data) {
-	if (typeof data === "number") {
-		data = data.toLocaleString();
-	}
+function changeValue(id, data, alt) {
 	try {
+		if (data === 0) {
+			const element = document.getElementById(id);
+			if (alt) {
+				element.innerHTML = ((typeof data === "number") ? alt.toLocaleString() : alt) + '<span class="tooltiptext">Manually Counted</span>';
+			} else {
+				element.innerHTML = 'N/A<span class="tooltiptext">Your Discord privacy settings are too strict!</span>';
+			}
+			return;
+		} else if (typeof data === "number") {
+			data = data.toLocaleString();
+		}
+
 		document.getElementById(id).innerHTML = data;
+
 	} catch(e) { }
 }
 
 function msToTime(s) {
+	if (s === 0) return 0;
+
 	let ms = s % 1000;
 	s = (s - ms) / 1000;
 	let secs = s % 60;
@@ -286,9 +318,7 @@ function msToTime(s) {
 	let mins = s % 60;
 	let hrs = (s - mins) / 60;
 
-	return `${hrs}:${mins <= 9 ? '0' : ''}${mins}:${
-		secs <= 9 ? '0' : ''
-	}${secs}`;
+	return `${hrs}:${mins <= 9 ? '0' : ''}${mins}:${secs <= 9 ? '0' : ''}${secs}`;
 }
 
 function formatBytes(bytes, decimals = 2) {
@@ -368,7 +398,10 @@ function resetData() {
 			chars: 0,
 			appopened: 0,
 			joined: 0,
-			connectedmils: 0
+			connectedmils: 0,
+			servers: 0,
+			channels: 0,
+			dms: 0,
 		}
 	}
 }
